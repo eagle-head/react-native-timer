@@ -1,0 +1,8 @@
+.bundle
+android
+ios
+node_modules
+coverage
+.eslintrc.js
+*.config.js
+index.js
