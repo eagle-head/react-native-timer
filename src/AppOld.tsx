@@ -1,37 +1,36 @@
 import React from "react";
 
-import { SafeAreaView, StyleSheet, View, Button, Text } from "react-native";
+import { SafeAreaView, StyleSheet, View, Button } from "react-native";
 
-import { useTimer } from "./hook/useTimer";
+import { Timer, TimerPropsRef, TimerStatus } from "./components/Timer";
 
 const App = () => {
-  const {
-    formattedTime,
-    status,
-    actions: { pause, reset, start },
-  } = useTimer({ initialMinutes: 0, initialSeconds: 60 });
+  const timerRef = React.useRef<TimerPropsRef>(null);
+  const [timerStatus, setTimerStatus] = React.useState<TimerStatus>("READY");
+
+  const handleStatusChange = (status: TimerStatus) => {
+    setTimerStatus(status);
+  };
 
   const handleStart = () => {
-    start();
+    timerRef.current?.start();
   };
 
   const handlePause = () => {
-    pause();
+    timerRef.current?.pause();
   };
 
   const handleReset = () => {
-    reset();
+    timerRef.current?.reset();
   };
 
   React.useEffect(() => {
-    console.log({ status });
-  }, [status]);
+    console.log({ timerStatus });
+  }, [timerStatus]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.timer} accessibilityRole="text">
-        {formattedTime}
-      </Text>
+      <Timer ref={timerRef} onStatusChange={handleStatusChange} seconds={5} textStyle={styles.timer} />
       <View style={styles.buttons}>
         <Button title="Start" onPress={handleStart} />
         <Button title="Pause" onPress={handlePause} />
@@ -54,7 +53,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   timer: {
-    fontSize: 60,
+    fontSize: 40,
   },
 });
 
