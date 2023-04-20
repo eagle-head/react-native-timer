@@ -2,14 +2,21 @@ import React from "react";
 
 import { SafeAreaView, StyleSheet, View, Button, Text } from "react-native";
 
-import { useTimer } from "./hook/useTimer";
+// import { useCountdown } from "./hooks/useCountdown";
+import { useCountUp } from "./hooks/useCountUp";
 
 const App = () => {
+  // const {
+  //   formattedTime,
+  //   status,
+  //   actions: { pause, reset, start },
+  // } = useCountdown({ initialSeconds: 10 });
+
   const {
     formattedTime,
     status,
-    actions: { pause, reset, start },
-  } = useTimer({ initialMinutes: 0, initialSeconds: 60 });
+    actions: { start, pause, reset },
+  } = useCountUp({ maxSeconds: 10 });
 
   const handleStart = () => {
     start();

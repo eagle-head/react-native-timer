@@ -1,72 +1,73 @@
 import React from "react";
 
-type TimerStatus = "READY" | "RUNNING" | "PAUSED" | "FINALIZED";
+type CountUpStatus = "READY" | "RUNNING" | "PAUSED" | "FINALIZED";
 
-type TimerActions = {
+type CountUpActions = {
   start: () => void;
   pause: () => void;
   reset: () => void;
 };
 
-type UseTimerProps = {
-  initialMinutes?: number;
-  initialSeconds?: number;
+type UseCountUpProps = {
+  maxSeconds: number;
 };
 
-type UseTimerReturn = {
+type UseCountUpReturn = {
   formattedTime: string;
-  status: TimerStatus;
-  actions: TimerActions;
+  status: CountUpStatus;
+  actions: CountUpActions;
 };
 
-export const useTimer = ({ initialMinutes = 0, initialSeconds = 0 }: UseTimerProps): UseTimerReturn => {
-  const initialTime = initialMinutes * 60 + initialSeconds;
-  const [remainingTime, setRemainingTime] = React.useState(initialTime);
-  const [status, setStatus] = React.useState<TimerStatus>("READY");
+export const useCountUp = ({ maxSeconds }: UseCountUpProps): UseCountUpReturn => {
+  if (maxSeconds <= 0) {
+    throw new Error("maxSeconds must be greater than 0.");
+  }
+
+  const [elapsedTime, setElapsedTime] = React.useState(0);
+  const [status, setStatus] = React.useState<CountUpStatus>("READY");
   const [isPaused, setIsPaused] = React.useState(true);
   const intervalRef = React.useRef<number | null>(null);
   const startTimeRef = React.useRef<number | null>(null);
 
   const start = React.useCallback(() => {
-    if (remainingTime === 0) {
+    if (elapsedTime === maxSeconds) {
       return;
     }
 
-    // Only start the timer if the current status is 'READY' or 'PAUSED'
     if (status !== "READY" && status !== "PAUSED") {
       return;
     }
 
     setStatus("RUNNING");
     setIsPaused(false);
-    startTimeRef.current = Date.now() - (initialTime - remainingTime) * 1000;
-  }, [initialTime, remainingTime, status]);
+    startTimeRef.current = Date.now() - elapsedTime * 1000;
+  }, [maxSeconds, elapsedTime, status]);
 
   const pause = React.useCallback(() => {
-    if (remainingTime !== 0) {
+    if (elapsedTime !== maxSeconds) {
       setStatus("PAUSED");
     }
 
     setIsPaused(true);
-  }, [remainingTime]);
+  }, [elapsedTime, maxSeconds]);
 
   const reset = React.useCallback(() => {
     pause();
     setStatus("READY");
-    setRemainingTime(initialTime);
-  }, [initialTime, pause]);
+    setElapsedTime(0);
+  }, [pause]);
 
   React.useEffect(() => {
     if (!isPaused) {
       intervalRef.current = setInterval(() => {
         if (startTimeRef.current !== null) {
-          const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
-          const newRemainingTime = Math.max(initialTime - elapsedTime, 0);
+          const newElapsedTime = Math.min(elapsed, maxSeconds);
 
-          setRemainingTime(newRemainingTime);
+          setElapsedTime(newElapsedTime);
 
-          if (newRemainingTime === 0) {
+          if (newElapsedTime === maxSeconds) {
             setStatus("FINALIZED");
             setIsPaused(true);
           }
@@ -82,7 +83,7 @@ export const useTimer = ({ initialMinutes = 0, initialSeconds = 0 }: UseTimerPro
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPaused, initialTime]);
+  }, [isPaused, maxSeconds]);
 
   const formatTimer = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -92,7 +93,7 @@ export const useTimer = ({ initialMinutes = 0, initialSeconds = 0 }: UseTimerPro
     return parts.join("");
   };
 
-  const formattedTime = formatTimer(remainingTime);
+  const formattedTime = formatTimer(elapsedTime);
 
   return {
     formattedTime,
